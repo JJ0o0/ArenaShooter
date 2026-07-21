@@ -23,6 +23,8 @@ add_executable(${CMAKE_PROJECT_NAME}
     "src/graphics/mesh.cpp"
     "src/graphics/shader.cpp"
 
+    "src/physics/collision.cpp"
+
     "src/platform/error_handling.cpp"
     "src/platform/system_info.cpp"
     "src/platform/window.cpp"
