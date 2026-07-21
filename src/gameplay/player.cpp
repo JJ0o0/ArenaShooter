@@ -30,6 +30,15 @@ void Player::HandleKeyboard(GLFWwindow* glfwWindow, float deltatime) {
     m_velocity.z = direction.z * speed;
 }
 
+Capsule Player::GetCapsule() const {
+    Capsule c{};
+    c.A = m_position + glm::vec3{0.0f, m_properties.Radius, 0.0f};
+    c.B = m_position + glm::vec3{0.0f, m_properties.Height - m_properties.Radius, 0.0f};
+    c.Radius = m_properties.Radius;
+
+    return c;
+}
+
 void Player::updateCamera() {
     m_camera.Position = m_position + glm::vec3(0.0f, m_properties.EyeHeight, 0.0f);
 }

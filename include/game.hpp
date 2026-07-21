@@ -4,7 +4,9 @@
 #include <graphics/shader.hpp>
 #include <graphics/mesh.hpp>
 #include <gameplay/player.hpp>
+#include <physics/shapes.hpp>
 #include <memory>
+#include <vector>
 
 class Game {
     public:
@@ -18,6 +20,8 @@ class Game {
 
         std::unique_ptr<Shader> m_shader;
         std::unique_ptr<Mesh> m_mesh;
+
+        std::vector<AABB> m_staticColliders;
 
         Player m_player;
 

@@ -1,5 +1,7 @@
 #include <game.hpp>
 #include <graphics/shapes/cube.hpp>
+#include <physics/collision.hpp>
+#include <scene/gameobject.hpp>
 
 void Game::setupWindowEvents() {
     m_window.OnKeyPress = [&](int key) {
@@ -25,11 +27,36 @@ void Game::setupRendering() {
 void Game::Initialize() {
     setupWindowEvents();
     setupRendering();
+
+    GameObject test{"Testing Object"};
+    m_player.SetPosition({0.0f, 0.0f, 3.0f});
+
+    m_staticColliders.push_back({
+        glm::vec3(-0.5f, -0.5f, -0.5f),
+        glm::vec3( 0.5f, 0.5f, 0.5f)
+    });
 }
 
 void Game::Update(float deltatime) {
     m_player.HandleKeyboard(m_window.GetHandle(), deltatime);
     m_player.Update(deltatime);
+
+    glm::vec3 pointOnSegment, pointOnBox;
+    Capsule playerCapsule = m_player.GetCapsule();
+
+    for (const auto& collider : m_staticColliders) {
+        if (Collision::CapsulexAABB(playerCapsule, collider, pointOnSegment, pointOnBox)) {
+            glm::vec3 diff = pointOnSegment - pointOnBox;
+            float d = glm::length(diff);
+
+            glm::vec3 dir = (d < 1e-6f) ? glm::vec3(0.0f, 1.0f, 0.0f) : (diff / d);
+
+            float penDepth = playerCapsule.Radius - d;
+
+            m_player.SetPosition(m_player.GetPosition() + (dir * penDepth));
+            playerCapsule = m_player.GetCapsule();
+        }
+    }
 }
 
 void Game::Render() {

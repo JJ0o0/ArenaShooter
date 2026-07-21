@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gameplay/camera.hpp>
+#include <physics/shapes.hpp>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
@@ -23,11 +24,13 @@ class Player {
         void Update(float deltatime);
         void HandleKeyboard(GLFWwindow* glfwWindow, float deltatime);
 
-        void SetPosition(const glm::vec3& position) { m_position = position; }
+        void SetPosition(const glm::vec3& position) { m_position = position; updateCamera(); }
         void SetVelocity(const glm::vec3& velocity) { m_velocity = velocity; }
 
         const glm::vec3& GetPosition() const { return m_position; }
         const glm::vec3& GetVelocity() const { return m_velocity; }
+
+        Capsule GetCapsule() const;
 
         Camera& GetCamera() { return m_camera; }
         const Camera& GetCamera() const { return m_camera; }

@@ -10,7 +10,7 @@ class Collision {
         static bool SpherexAABB(const Sphere& s, const AABB& b);
 
         static bool CapsulexCapsule(const Capsule& a, const Capsule& b);
-        static bool CapsulexAABB(const Capsule& c, const AABB& b);
+        static bool CapsulexAABB(const Capsule& c, const AABB& b, glm::vec3& outPointOnSegment, glm::vec3& outPointOnBox);
     private:
         static void ClosestPointLinexLine(
             const glm::vec3& A1, const glm::vec3& B1,

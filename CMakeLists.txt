@@ -29,6 +29,8 @@ add_executable(${CMAKE_PROJECT_NAME}
     "src/platform/system_info.cpp"
     "src/platform/window.cpp"
 
+    "src/scene/gameobject.cpp"
+
     "src/external/gl.c"
     "src/external/stb_image.cpp"
     "src/external/tinyfiledialogs.c"

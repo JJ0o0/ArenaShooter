@@ -133,7 +133,7 @@ bool Collision::CapsulexCapsule(const Capsule &a, const Capsule &b) {
     return ClosestPointSegmentxSegment(a.A, a.B, b.A, b.B, a.Radius, b.Radius);
 }
 
-bool Collision::CapsulexAABB(const Capsule &c, const AABB &b) {
+bool Collision::CapsulexAABB(const Capsule &c, const AABB &b, glm::vec3& outPointOnSegment, glm::vec3& outPointOnBox) {
     glm::vec3 pointOnSegment = c.A + 0.5f * (c.B - c.A);
     glm::vec3 pointOnBox{0.0f};
 
@@ -143,7 +143,11 @@ bool Collision::CapsulexAABB(const Capsule &c, const AABB &b) {
         pointOnSegment = ClosestPointOnSegment(pointOnBox, c.A, c.B);
     }
 
+    outPointOnSegment = pointOnSegment;
+    outPointOnBox = pointOnBox;
+
     glm::vec3 diff = pointOnSegment - pointOnBox;
     float d2 = glm::dot(diff, diff);
+
     return d2 < (c.Radius * c.Radius);
 }
