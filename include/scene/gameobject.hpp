@@ -1,5 +1,6 @@
 #pragma once
 
+#include <graphics/material.hpp>
 #include <scene/transform.hpp>
 #include <physics/shapes.hpp>
 #include <scene/model.hpp>
@@ -17,6 +18,9 @@ class GameObject {
         void SetModel(const std::shared_ptr<Model>& model) { m_model = model; }
         const std::shared_ptr<Model>& GetModel() const { return m_model; }
 
+        void SetMaterial(const std::shared_ptr<Material>& material) { m_material = material; }
+        const std::shared_ptr<Material>& GetMaterial() const;
+
         Transform& GetTransform() { return m_transform; }
         const Transform& GetTransform() const { return m_transform; }
 
@@ -30,6 +34,7 @@ class GameObject {
         UUID m_uuid{};
 
         std::shared_ptr<Model> m_model;
+        std::shared_ptr<Material> m_material;
 
         Transform m_transform;
         CollisionShape m_collision;

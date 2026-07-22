@@ -80,6 +80,10 @@ void Shader::SetVec4(const std::string& name, const glm::vec4& value) {
     glProgramUniform4fv(m_id, getUniformLocation(name), 1, glm::value_ptr(value));
 }
 
+void Shader::SetMat3(const std::string& name, const glm::mat3& value) {
+    glProgramUniformMatrix3fv(m_id, getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
 void Shader::SetMat4(const std::string& name, const glm::mat4& value) {
     glProgramUniformMatrix4fv(m_id, getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
 }
@@ -91,7 +95,7 @@ void Shader::SetMat4Array(const std::string& name, const std::vector<glm::mat4>&
 
 int Shader::getUniformLocation(const std::string& name) {
     int success = glGetUniformLocation(m_id, name.c_str());
-    if (success == -1) std::cerr << "Could not find \"" << name << "\" uniform.\n";
+    if (success == -1) std::cerr << "Could not find '" << name << "' uniform.\n";
 
     return success;
 }
@@ -128,7 +132,7 @@ std::string Shader::readFile(const std::string& path) {
     std::ifstream file(path);
 
     if (!file.is_open()) {
-        ErrorHandling::ShowError("Error", "Could not open file at \"{}\"", path);
+        ErrorHandling::ShowError("Error", "Could not open file at '{}'", path);
         return "";
     }
 

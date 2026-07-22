@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 
 struct PlayerProperties {
-    float Speed = 10.0f;
+    float Speed = 3.0f;
     float JumpForce = 5.0f;
 
     float Gravity = 20.0f;

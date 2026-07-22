@@ -9,6 +9,21 @@ GameObject::GameObject(const std::string& name)
     std::cout << "Created '" << name << "' (uuid: '" << m_uuid.ToString() << "')\n";
 }
 
+const std::shared_ptr<Material>& GameObject::GetMaterial() const {
+    if (m_material) return m_material;
+
+    static std::shared_ptr<Material> s_fallback = []{
+        auto mat = std::make_shared<Material>();
+        mat->Diffuse = glm::vec3(1.0f, 0.0f, 1.0f);
+        mat->Specular = glm::vec3(0.0f);
+        mat->Shininess = 1.0f;
+
+        return mat;
+    }();
+
+    return s_fallback;
+}
+
 CollisionShape GameObject::GetWorldCollisionShape() const {
     return std::visit(overloaded{
         [](std::monostate) -> CollisionShape {

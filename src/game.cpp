@@ -25,15 +25,26 @@ void Game::setupRendering() {
 
     GameObject floor {"Floor"};
 
-    floor.SetModel(std::make_shared<Model>(
-        std::vector<std::shared_ptr<Mesh>>{ cube },
-        defaultShader
-    ));
+    auto floorModel = std::make_shared<Model>();
+    floorModel->Meshes = std::vector<std::shared_ptr<Mesh>>{cube};
+    floorModel->ModelShader = defaultShader;
+
+    auto floorMaterial = std::make_shared<Material>();
+    floorMaterial->Diffuse = glm::vec3{0.18f, 0.20f, 0.16f};
+    floorMaterial->Specular = glm::vec3{0.25f};
+    floorMaterial->Shininess = 12.0f;
+
+    floor.SetModel(floorModel);
+    floor.SetMaterial(floorMaterial);
 
     floor.GetTransform().Position = glm::vec3(0.0f, -0.5f, 0.0f);
     floor.GetTransform().Scale = glm::vec3(40.0f, 1.0f, 40.0f);
     floor.SetCollision(AABB{glm::vec3(-0.5f), glm::vec3(0.5f)});
     m_gameObjects.push_back(std::move(floor));
+
+    m_light.Direction = glm::normalize(glm::vec3(-0.3f, -1.0f, -0.2f));
+    m_light.Color = glm::vec3(1.0f, 0.95f, 0.85f);
+    m_light.Ambient = glm::vec3(0.03f);
 }
 
 void Game::Initialize() {
@@ -83,12 +94,22 @@ void Game::Render() {
     for (const auto& obj : m_gameObjects) {
         if (!obj.HasModel()) continue;
 
+        const auto& material = obj.GetMaterial();
         const auto& model = obj.GetModel();
         const auto& shader = model->ModelShader;
         shader->Bind();
-            shader->SetMat4("uModel", obj.GetTransform().GetModel());
+            glm::mat4 modelMatrix = obj.GetTransform().GetModel();
+            glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
+
+            shader->SetMat3("uNormalMatrix", normalMatrix);
+            shader->SetMat4("uModel", modelMatrix);
             shader->SetMat4("uView", m_player.GetCamera().GetViewMatrix());
             shader->SetMat4("uProjection", m_player.GetCamera().GetProjectionMatrix());
+            shader->SetVec3("uViewPosition", m_player.GetCamera().Position);
+
+            material->Apply(*shader);
+            m_light.Apply(*shader);
+
             for (const auto& mesh : model->Meshes) mesh->Draw();
         shader->Unbind();
     }
