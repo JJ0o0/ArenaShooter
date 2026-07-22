@@ -1,6 +1,7 @@
 #include <gameplay/player.hpp>
 
 void Player::Update(float deltatime) {
+    m_velocity.y -= m_properties.Gravity * deltatime;
     m_position += m_velocity * deltatime;
 
     updateCamera();

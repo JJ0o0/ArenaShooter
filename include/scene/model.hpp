@@ -7,5 +7,5 @@
 
 struct Model {
     std::vector<std::shared_ptr<Mesh>> Meshes{};
-    std::vector<std::unique_ptr<Shader>> Shaders{};
+    std::shared_ptr<Shader> ModelShader;
 };

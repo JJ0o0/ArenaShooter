@@ -1,11 +1,9 @@
 #pragma once
 
 #include <platform/window.hpp>
-#include <graphics/shader.hpp>
-#include <graphics/mesh.hpp>
+#include <scene/gameobject.hpp>
 #include <gameplay/player.hpp>
 #include <physics/shapes.hpp>
-#include <memory>
 #include <vector>
 
 class Game {
@@ -18,10 +16,7 @@ class Game {
     private:
         Window& m_window;
 
-        std::unique_ptr<Shader> m_shader;
-        std::unique_ptr<Mesh> m_mesh;
-
-        std::vector<AABB> m_staticColliders;
+        std::vector<GameObject> m_gameObjects;
 
         Player m_player;
 

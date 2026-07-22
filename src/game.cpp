@@ -20,51 +20,76 @@ void Game::setupWindowEvents() {
 }
 
 void Game::setupRendering() {
-    m_shader = std::make_unique<Shader>("assets/shaders/default.vert", "assets/shaders/default.frag");
-    m_mesh = std::make_unique<Mesh>(CreateCube());
+    auto defaultShader = std::make_shared<Shader>("assets/shaders/default.vert", "assets/shaders/default.frag");
+    auto cube = std::make_shared<Mesh>(CreateCube());
+
+    GameObject floor {"Floor"};
+
+    floor.SetModel(std::make_shared<Model>(
+        std::vector<std::shared_ptr<Mesh>>{ cube },
+        defaultShader
+    ));
+
+    floor.GetTransform().Position = glm::vec3(0.0f, -0.5f, 0.0f);
+    floor.GetTransform().Scale = glm::vec3(40.0f, 1.0f, 40.0f);
+    floor.SetCollision(AABB{glm::vec3(-0.5f), glm::vec3(0.5f)});
+    m_gameObjects.push_back(std::move(floor));
 }
 
 void Game::Initialize() {
     setupWindowEvents();
     setupRendering();
 
-    GameObject test{"Testing Object"};
-    m_player.SetPosition({0.0f, 0.0f, 3.0f});
-
-    m_staticColliders.push_back({
-        glm::vec3(-0.5f, -0.5f, -0.5f),
-        glm::vec3( 0.5f, 0.5f, 0.5f)
-    });
+    m_player.SetPosition({0.0f, 3.0f, 3.0f});
 }
 
 void Game::Update(float deltatime) {
     m_player.HandleKeyboard(m_window.GetHandle(), deltatime);
     m_player.Update(deltatime);
 
-    glm::vec3 pointOnSegment, pointOnBox;
     Capsule playerCapsule = m_player.GetCapsule();
+    m_player.SetGrounded(false);
+    for (const auto& obj : m_gameObjects) {
+        CollisionShape worldShape = obj.GetWorldCollisionShape();
 
-    for (const auto& collider : m_staticColliders) {
-        if (Collision::CapsulexAABB(playerCapsule, collider, pointOnSegment, pointOnBox)) {
+        const AABB* box = std::get_if<AABB>(&worldShape);
+        if (!box) continue;
+
+        glm::vec3 pointOnSegment, pointOnBox;
+        if (Collision::CapsulexAABB(playerCapsule, *box, pointOnSegment, pointOnBox)) {
             glm::vec3 diff = pointOnSegment - pointOnBox;
             float d = glm::length(diff);
 
-            glm::vec3 dir = (d < 1e-6f) ? glm::vec3(0.0f, 1.0f, 0.0f) : (diff / d);
-
+            glm::vec3 dir = (d < 1e-6f) ? glm::vec3(0.0f, 1.0f, 0.0f) : diff / d;
             float penDepth = playerCapsule.Radius - d;
 
-            m_player.SetPosition(m_player.GetPosition() + (dir * penDepth));
+            m_player.Translate(dir * penDepth);
             playerCapsule = m_player.GetCapsule();
+
+            if (glm::dot(dir, glm::vec3(0.0f, 1.0f, 0.0f)) > 0.5f) {
+                m_player.SetGrounded(true);
+
+                glm::vec3 vel = m_player.GetVelocity();
+                if (vel.y < 0.0f) {
+                    vel.y = 0.0f;
+                    m_player.SetVelocity(vel);
+                }
+            }
         }
     }
 }
 
 void Game::Render() {
-    m_shader->Bind();
-        m_shader->SetMat4("uModel", glm::mat4{1.0f});
-        m_shader->SetMat4("uView", m_player.GetCamera().GetViewMatrix());
-        m_shader->SetMat4("uProjection", m_player.GetCamera().GetProjectionMatrix());
+    for (const auto& obj : m_gameObjects) {
+        if (!obj.HasModel()) continue;
 
-        m_mesh->Draw();
-    m_shader->Unbind();
+        const auto& model = obj.GetModel();
+        const auto& shader = model->ModelShader;
+        shader->Bind();
+            shader->SetMat4("uModel", obj.GetTransform().GetModel());
+            shader->SetMat4("uView", m_player.GetCamera().GetViewMatrix());
+            shader->SetMat4("uProjection", m_player.GetCamera().GetProjectionMatrix());
+            for (const auto& mesh : model->Meshes) mesh->Draw();
+        shader->Unbind();
+    }
 }

@@ -1,7 +1,8 @@
 #include <physics/collision.hpp>
-
+#include <utilities/overloaded.hpp>
 #include <glm/glm.hpp>
 #include <algorithm>
+#include <variant>
 
 void Collision::ClosestPointLinexLine(
     const glm::vec3& A1, const glm::vec3& B1,
@@ -129,6 +130,16 @@ bool Collision::SpherexAABB(const Sphere &s, const AABB &b) {
     return d2 < (s.Radius * s.Radius);
 }
 
+bool Collision::SpherexCapsule(const Sphere &s, const Capsule &b) {
+    glm::vec3 closest = ClosestPointOnSegment(s.Center, b.A, b.B);
+    glm::vec3 centerSub = s.Center - closest;
+
+    float d2 = glm::dot(centerSub, centerSub);
+    float radiusSum = s.Radius + b.Radius;
+
+    return d2 < (radiusSum * radiusSum);
+}
+
 bool Collision::CapsulexCapsule(const Capsule &a, const Capsule &b) {
     return ClosestPointSegmentxSegment(a.A, a.B, b.A, b.B, a.Radius, b.Radius);
 }
@@ -150,4 +161,25 @@ bool Collision::CapsulexAABB(const Capsule &c, const AABB &b, glm::vec3& outPoin
     float d2 = glm::dot(diff, diff);
 
     return d2 < (c.Radius * c.Radius);
+}
+
+bool Collision::Test(const CollisionShape &a, const CollisionShape &b) {
+    return std::visit(overloaded{
+        [](const auto&, const auto&) { return false; },
+        [](const AABB& x, const AABB& y) { return AABBxAABB(x, y); },
+        [](const Sphere& x, const Sphere& y) { return SpherexSphere(x, y); },
+        [](const Capsule& x, const Capsule& y) { return CapsulexCapsule(x, y); },
+        [](const Sphere& x, const AABB& y) { return SpherexAABB(x, y); },
+        [](const AABB& x, const Sphere& y) { return SpherexAABB(y, x); },
+        [](const Sphere& x, const Capsule& y) { return SpherexCapsule(x, y); },
+        [](const Capsule& x, const Sphere& y) { return SpherexCapsule(y, x); },
+        [](const Capsule& x, const AABB& y) {
+            glm::vec3 p1, p2;
+            return CapsulexAABB(x, y, p1, p2);
+        },
+        [](const AABB& x, const Capsule& y) {
+            glm::vec3 p1, p2;
+            return CapsulexAABB(y, x, p1, p2);
+        }
+    }, a, b);
 }
