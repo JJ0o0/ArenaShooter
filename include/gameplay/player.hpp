@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gameplay/camera.hpp>
+#include <scene/transform.hpp>
 #include <physics/shapes.hpp>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -34,6 +35,7 @@ class Player {
         const glm::vec3& GetPosition() const { return m_position; }
         const glm::vec3& GetVelocity() const { return m_velocity; }
 
+        Transform GetVisualTransform() const;
         Capsule GetCapsule() const;
 
         Camera& GetCamera() { return m_camera; }

@@ -31,6 +31,14 @@ void Player::HandleKeyboard(GLFWwindow* glfwWindow, float deltatime) {
     m_velocity.z = direction.z * speed;
 }
 
+Transform Player::GetVisualTransform() const {
+    Transform t{};
+    t.Position = m_position + glm::vec3{0.0f, m_properties.Height / 2.0f, 0.0f};
+    t.Scale = glm::vec3{m_properties.Radius * 2.0f, m_properties.Height, m_properties.Radius * 2.0f};
+
+    return t;
+}
+
 Capsule Player::GetCapsule() const {
     Capsule c{};
     c.A = m_position + glm::vec3{0.0f, m_properties.Radius, 0.0f};

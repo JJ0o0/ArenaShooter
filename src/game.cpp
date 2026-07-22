@@ -7,7 +7,9 @@ void Game::setupWindowEvents() {
     m_window.OnKeyPress = [&](int key) {
         switch (key) {
             case GLFW_KEY_ESCAPE:
+                if (m_window.IsMouseLocked()) m_player.GetCamera().ResetMouseMovement();
                 m_window.ToggleLockMouse();
+
                 break;
         }
     };
@@ -23,18 +25,26 @@ void Game::setupRendering() {
     auto defaultShader = std::make_shared<Shader>("assets/shaders/default.vert", "assets/shaders/default.frag");
     auto cube = std::make_shared<Mesh>(CreateCube());
 
-    GameObject floor {"Floor"};
+    auto cubeModel = std::make_shared<Model>();
+    cubeModel->Meshes = std::vector<std::shared_ptr<Mesh>>{cube};
+    cubeModel->ModelShader = defaultShader;
 
-    auto floorModel = std::make_shared<Model>();
-    floorModel->Meshes = std::vector<std::shared_ptr<Mesh>>{cube};
-    floorModel->ModelShader = defaultShader;
+    auto playerMaterial = std::make_shared<Material>();
+    playerMaterial->Diffuse = glm::vec3(0.8f, 0.2f, 0.2f);
+    playerMaterial->Specular = glm::vec3(0.3f);
+    playerMaterial->Shininess = 16.0f;
+
+    m_playerVisual.SetModel(cubeModel);
+    m_playerVisual.SetMaterial(playerMaterial);
+
+    GameObject floor{ "Floor" };
 
     auto floorMaterial = std::make_shared<Material>();
     floorMaterial->Diffuse = glm::vec3{0.18f, 0.20f, 0.16f};
     floorMaterial->Specular = glm::vec3{0.25f};
     floorMaterial->Shininess = 12.0f;
 
-    floor.SetModel(floorModel);
+    floor.SetModel(cubeModel);
     floor.SetMaterial(floorMaterial);
 
     floor.GetTransform().Position = glm::vec3(0.0f, -0.5f, 0.0f);
@@ -57,6 +67,8 @@ void Game::Initialize() {
 void Game::Update(float deltatime) {
     m_player.HandleKeyboard(m_window.GetHandle(), deltatime);
     m_player.Update(deltatime);
+
+    m_playerVisual.GetTransform() = m_player.GetVisualTransform();
 
     Capsule playerCapsule = m_player.GetCapsule();
     m_player.SetGrounded(false);
@@ -90,27 +102,33 @@ void Game::Update(float deltatime) {
     }
 }
 
+void Game::renderGameObject(const GameObject& obj) {
+    const auto& material = obj.GetMaterial();
+    const auto& model = obj.GetModel();
+    const auto& shader = model->ModelShader;
+    shader->Bind();
+        glm::mat4 modelMatrix = obj.GetTransform().GetModel();
+        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
+
+        shader->SetMat3("uNormalMatrix", normalMatrix);
+        shader->SetMat4("uModel", modelMatrix);
+        shader->SetMat4("uView", m_player.GetCamera().GetViewMatrix());
+        shader->SetMat4("uProjection", m_player.GetCamera().GetProjectionMatrix());
+        shader->SetVec3("uViewPosition", m_player.GetCamera().Position);
+
+        material->Apply(*shader);
+        m_light.Apply(*shader);
+
+        for (const auto& mesh : model->Meshes) mesh->Draw();
+    shader->Unbind();
+}
+
 void Game::Render() {
     for (const auto& obj : m_gameObjects) {
         if (!obj.HasModel()) continue;
 
-        const auto& material = obj.GetMaterial();
-        const auto& model = obj.GetModel();
-        const auto& shader = model->ModelShader;
-        shader->Bind();
-            glm::mat4 modelMatrix = obj.GetTransform().GetModel();
-            glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
-
-            shader->SetMat3("uNormalMatrix", normalMatrix);
-            shader->SetMat4("uModel", modelMatrix);
-            shader->SetMat4("uView", m_player.GetCamera().GetViewMatrix());
-            shader->SetMat4("uProjection", m_player.GetCamera().GetProjectionMatrix());
-            shader->SetVec3("uViewPosition", m_player.GetCamera().Position);
-
-            material->Apply(*shader);
-            m_light.Apply(*shader);
-
-            for (const auto& mesh : model->Meshes) mesh->Draw();
-        shader->Unbind();
+        renderGameObject(obj);
     }
+
+    renderGameObject(m_playerVisual);
 }

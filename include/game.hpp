@@ -19,9 +19,12 @@ class Game {
 
         std::vector<GameObject> m_gameObjects;
 
+        GameObject m_playerVisual{"PlayerVisual"};
         Player m_player;
+
         Light m_light;
 
         void setupWindowEvents();
         void setupRendering();
+        void renderGameObject(const GameObject& obj);
 };

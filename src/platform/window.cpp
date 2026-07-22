@@ -75,7 +75,9 @@ bool Window::Initialize(const WindowProperties& properties) {
     glfwSwapInterval(m_properties.VSync);
 
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE);
+
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CW);
 
     stbi_set_flip_vertically_on_load(true);
 
